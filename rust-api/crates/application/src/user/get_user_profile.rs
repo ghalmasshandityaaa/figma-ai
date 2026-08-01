@@ -21,6 +21,7 @@ impl GetUserProfile {
         Self { repository }
     }
 
+    #[tracing::instrument(skip_all, fields(user_id = %user_id))]
     pub async fn execute(&self, user_id: UserId) -> AppResult<UserProfile> {
         let user = self
             .repository

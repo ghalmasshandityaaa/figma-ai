@@ -30,6 +30,7 @@ impl LoginUser {
         }
     }
 
+    #[tracing::instrument(skip_all, fields(email = %cmd.email))]
     pub async fn execute(&self, cmd: LoginUserCommand) -> AppResult<TokenClaims> {
         let email = Email::parse(cmd.email)?;
         let raw_password = RawPassword::parse(cmd.password)?;

@@ -4,7 +4,7 @@ use opentelemetry_otlp::{SpanExporter, WithExportConfig};
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use opentelemetry_sdk::Resource;
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 /// Dropping this shuts the OTLP batch exporter down and flushes the
 /// non-blocking log writer — hold it for the lifetime of `main`.
@@ -47,9 +47,16 @@ pub fn init_tracing(service_name: &str, otlp_endpoint: &str) -> anyhow::Result<T
     let (non_blocking_writer, writer_guard) = tracing_appender::non_blocking(std::io::stdout());
 
     let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+    // Every #[instrument]-created span (handler/use-case/repository/...) gets an
+    // automatic "new" log line on entry and a "close" log line on drop, the latter
+    // carrying `time.busy`/`time.idle` — a start/end pair per layer for free, with
+    // per-layer latency, correlated by the shared trace/span context. NEW+CLOSE
+    // (not ENTER+EXIT) fire exactly once per span even for a `.await`ed async fn
+    // that yields many times, so this doesn't spam logs.
     let fmt_layer = tracing_subscriber::fmt::layer()
         .json()
         .flatten_event(true)
+        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
         .with_writer(non_blocking_writer);
     let filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,sqlx=warn"));
