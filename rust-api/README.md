@@ -162,6 +162,16 @@ No `sqlx-cli` install required. `api`/`worker` also auto-run pending migrations 
 convenience — `migrator` is for explicit up/down/status control (rollback, unlike Prisma's
 migration story, is a first-class one-liner here).
 
+## Trying every endpoint (`xh`)
+
+```bash
+cargo install xh   # https://github.com/ducaale/xh — httpie-compatible, single binary
+./examples.sh       # exercises every route: happy path + validation/conflict/auth/404 cases
+```
+
+Runs against `$BASE` (defaults to `http://localhost:8080`); each call is copy-pasteable on its
+own for manual poking. Requires the API + Postgres up (either `Running` mode above) and `jq`.
+
 ## Verifying observability
 
 Register a user, then open Grafana → Dashboards → "rust-api — Traces" (or Explore → Tempo →
