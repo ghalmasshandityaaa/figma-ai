@@ -7,6 +7,8 @@ use infrastructure::telemetry::init_tracing;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenvy::dotenv().ok();
+
     let config = AppConfig::load()?;
     let _telemetry = init_tracing(&format!("{}-worker", config.service_name), &config.otlp_endpoint)?;
 

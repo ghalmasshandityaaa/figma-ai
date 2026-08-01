@@ -133,10 +133,15 @@ compression → concurrency cap (4096 in-flight) → 15s timeout → `propagate_
 
 ## Running
 
-```bash
-cp .env.example .env
-docker compose up --build
-```
+See [`DOCKER.md`](./DOCKER.md) for full instructions — two modes:
+
+- **Full Docker**: `docker compose up --build` — everything containerized, zero local toolchain
+  needed beyond Docker.
+- **Infra-only + `cargo run`** (recommended while developing): Postgres/Tempo/Grafana in
+  Docker, `api`/`worker` run natively via `cargo run`, with `cargo-watch` for hot reload
+  (`nodemon`-equivalent).
+
+Quick reference:
 
 - API: `http://localhost:8080`
 - Grafana: `http://localhost:13000` (anonymous admin; Tempo datasource + traces dashboard
@@ -156,14 +161,6 @@ docker compose --profile tools run --rm migrator down 0        # revert to a spe
 No `sqlx-cli` install required. `api`/`worker` also auto-run pending migrations on boot for
 convenience — `migrator` is for explicit up/down/status control (rollback, unlike Prisma's
 migration story, is a first-class one-liner here).
-
-## Local development (no Docker for the binaries)
-
-```bash
-docker compose up postgres tempo grafana -d
-cargo run -p api      # migrations run automatically on boot
-cargo run -p worker
-```
 
 ## Verifying observability
 

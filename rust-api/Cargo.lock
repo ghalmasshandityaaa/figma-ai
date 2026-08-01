@@ -74,6 +74,7 @@ dependencies = [
  "application",
  "axum",
  "domain",
+ "dotenvy",
  "garde",
  "governor",
  "hyper",
@@ -3711,6 +3712,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "dotenvy",
  "infrastructure",
  "kernel",
  "serde",

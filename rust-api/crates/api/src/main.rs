@@ -21,6 +21,10 @@ use state::AppState;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Only present in local dev; docker/production set real env vars and
+    // won't have a `.env` file, so a missing file is silently ignored.
+    dotenvy::dotenv().ok();
+
     let config = AppConfig::load()?;
     let _telemetry = init_tracing(&config.service_name, &config.otlp_endpoint)?;
 
