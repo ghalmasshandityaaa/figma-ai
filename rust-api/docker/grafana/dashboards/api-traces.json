@@ -8,32 +8,13 @@
   "panels": [
     {
       "id": 1,
-      "type": "traces",
-      "title": "Recent requests",
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
-      "datasource": { "type": "tempo", "uid": "Tempo" },
-      "targets": [
-        {
-          "queryType": "traceqlSearch",
-          "query": "{ resource.service.name = \"rust-api\" }",
-          "limit": 50,
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "type": "nodeGraph",
-      "title": "Service graph",
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 12 },
-      "datasource": { "type": "tempo", "uid": "Tempo" },
-      "targets": [
-        {
-          "queryType": "traceqlSearch",
-          "query": "{ resource.service.name = \"rust-api\" }",
-          "refId": "A"
-        }
-      ]
+      "type": "text",
+      "title": "How to read a trace",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "[**Open trace search in Explore →**](/explore?schemaVersion=1&panes=%7B%22ocy%22:%7B%22datasource%22:%22Tempo%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22tempo%22,%22uid%22:%22Tempo%22%7D,%22queryType%22:%22traceqlSearch%22,%22query%22:%22%7B%20resource.service.name%20%3D%20%5C%22rust-api%5C%22%20%7D%22,%22limit%22:50,%22tableType%22:%22traces%22,%22filters%22:%5B%5D%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D%7D&orgId=1) — lists recent traces; click any row to expand the full waterfall: one span per layer the request passed through (`http_request` → handler → use case → repository/DB query), each with its own duration.\n\n*Why a link instead of an embedded panel:* Grafana's dashboard-native Tempo search panel (`type: traces`, `queryType: traceqlSearch`) queries via the `/api/ds/query` backend API, which — as of Grafana 11.1–12.0 — doesn't implement that query type server-side ([grafana/grafana#95042](https://github.com/grafana/grafana/issues/95042); reproduced against 11.1.0/11.3.4/12.0.0 during setup, same error on all three: `unsupported query type: 'traceqlSearch'`). Explore works because its frontend falls back to Tempo's REST API via the older datasource-proxy route — a fallback dashboard panels don't have. No service-map/node-graph panel here either, on purpose: that needs Tempo's metrics-generator writing to a Prometheus-compatible backend, which this stack deliberately doesn't run.\n\nA layer *missing* from the waterfall — or a request whose trace never got created at all — means it never returned from the previous layer; cross-reference `request_id` in the JSON logs (`docker compose logs api`) to find the last `\"new\"`/`\"request started\"` line with no matching `\"close\"`/`\"request completed\"` for that id — that's where it stalled or crashed."
+      }
     }
   ]
 }

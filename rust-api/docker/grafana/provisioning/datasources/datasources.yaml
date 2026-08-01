@@ -2,6 +2,7 @@ apiVersion: 1
 
 datasources:
   - name: Tempo
+    uid: Tempo
     type: tempo
     access: proxy
     url: http://tempo:3200
@@ -9,6 +10,6 @@ datasources:
     jsonData:
       tracesToLogs: {}
       nodeGraph:
-        enabled: true
+        enabled: false # needs Tempo metrics-generator -> Prometheus; deliberately unused
       search:
         hide: false
