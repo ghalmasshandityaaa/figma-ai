@@ -23,8 +23,16 @@ pub async fn request_logging(req: Request, next: Next) -> Response {
         .unwrap_or("-")
         .to_owned();
 
+    // `otel.name` is a tracing-opentelemetry convention: when present, it
+    // overrides the span's exported OTEL name (the static "http_request"
+    // stays as-is in JSON logs/`target`). Tempo's trace list "Name" column
+    // shows the root span's name, so this turns every row into e.g.
+    // "GET /api/v1/users" instead of an indistinguishable "http_request" —
+    // no per-query TraceQL `select()` needed to tell requests apart.
+    let route = format!("{method} {path}");
     let span = tracing::info_span!(
         "http_request",
+        otel.name = %route,
         request_id = %request_id,
         http.method = %method,
         http.path = %path,
