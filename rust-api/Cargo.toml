@@ -1,0 +1,79 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/kernel",
+    "crates/domain",
+    "crates/application",
+    "crates/infrastructure",
+    "crates/api",
+    "crates/worker",
+    "crates/migrator",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+authors = ["Platform Team"]
+license = "UNLICENSED"
+publish = false
+
+[workspace.dependencies]
+# runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "net", "time"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# web
+axum = { version = "0.7", features = ["macros"] }
+tower = { version = "0.4", features = ["limit", "timeout", "util"] }
+tower-http = { version = "0.5", features = ["trace", "compression-full", "timeout", "limit", "cors", "request-id", "catch-panic", "set-header"] }
+hyper = { version = "1", features = ["full"] }
+
+# security middleware
+governor = { version = "0.10", features = ["dashmap"] }
+
+# json — sonic-rs: SIMD-accelerated, fastest serde-compatible JSON in the Rust ecosystem
+sonic-rs = "0.3"
+serde = { version = "1", features = ["derive"] }
+
+# db
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate"] }
+
+# validation
+garde = { version = "0.20", features = ["derive", "email"] }
+
+# security
+argon2 = "0.5"
+rusty_paseto = { version = "0.10", default-features = false, features = ["batteries_included", "v4_local"] }
+base64 = "0.22"
+secrecy = { version = "0.10", features = ["serde"] }
+
+# ids / time
+uuid = { version = "1", features = ["v7", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# error handling
+thiserror = "1"
+anyhow = "1"
+
+# observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+tracing-opentelemetry = "0.33"
+opentelemetry = "0.32"
+opentelemetry_sdk = "0.32"
+opentelemetry-otlp = { version = "0.32", features = ["grpc-tonic"] }
+opentelemetry-semantic-conventions = "0.32"
+
+# config
+config = { version = "0.14", default-features = false, features = ["toml"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+# NEVER "abort" — CatchPanicLayer needs `panic = "unwind"` (the default) to
+# turn a handler panic into a clean 500 response instead of killing the
+# whole process.
+strip = true
+opt-level = 3

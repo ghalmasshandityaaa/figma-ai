@@ -1,0 +1,12 @@
+[package]
+name = "application"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+kernel = { path = "../kernel" }
+domain = { path = "../domain" }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }

@@ -1,0 +1,39 @@
+{
+  "title": "rust-api — Traces",
+  "uid": "rust-api-traces",
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "time": { "from": "now-1h", "to": "now" },
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "traces",
+      "title": "Recent requests",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "tempo", "uid": "Tempo" },
+      "targets": [
+        {
+          "queryType": "traceqlSearch",
+          "query": "{ resource.service.name = \"rust-api\" }",
+          "limit": 50,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "nodeGraph",
+      "title": "Service graph",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 12 },
+      "datasource": { "type": "tempo", "uid": "Tempo" },
+      "targets": [
+        {
+          "queryType": "traceqlSearch",
+          "query": "{ resource.service.name = \"rust-api\" }",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

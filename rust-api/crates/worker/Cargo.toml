@@ -1,0 +1,22 @@
+[package]
+name = "worker"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "worker"
+path = "src/main.rs"
+
+[dependencies]
+kernel = { path = "../kernel" }
+infrastructure = { path = "../infrastructure" }
+
+tokio = { workspace = true, features = ["full"] }
+sqlx = { workspace = true }
+sonic-rs = { workspace = true }
+serde = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }

@@ -1,0 +1,12 @@
+[package]
+name = "kernel"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
