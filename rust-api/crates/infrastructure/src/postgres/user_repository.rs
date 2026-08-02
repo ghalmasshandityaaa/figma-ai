@@ -49,7 +49,7 @@ impl From<UserRow> for User {
 
 #[async_trait]
 impl UserRepository for PgUserRepository {
-    #[tracing::instrument(name = "db.insert_with_event", skip_all, fields(user_id = %user.id))]
+    #[tracing::instrument(name = "repository.insert_with_event", skip_all, fields(user_id = %user.id))]
     async fn insert_with_event(&self, user: &User, event: &UserEvent) -> AppResult<()> {
         match &self.db {
             DbHandle::Pool(pool) => {
@@ -68,7 +68,7 @@ impl UserRepository for PgUserRepository {
         }
     }
 
-    #[tracing::instrument(name = "db.find_by_id", skip_all, fields(user_id = %id))]
+    #[tracing::instrument(name = "repository.find_by_id", skip_all, fields(user_id = %id))]
     async fn find_by_id(&self, id: UserId) -> AppResult<Option<User>> {
         let query = sqlx::query_as::<_, UserRow>("select * from users where id = $1").bind(id.as_uuid());
 
@@ -81,7 +81,7 @@ impl UserRepository for PgUserRepository {
         Ok(row.map(User::from))
     }
 
-    #[tracing::instrument(name = "db.find_by_email", skip_all)]
+    #[tracing::instrument(name = "repository.find_by_email", skip_all)]
     async fn find_by_email(&self, email: &Email) -> AppResult<Option<User>> {
         let query =
             sqlx::query_as::<_, UserRow>("select * from users where email = $1").bind(email.as_str());
@@ -95,7 +95,7 @@ impl UserRepository for PgUserRepository {
         Ok(row.map(User::from))
     }
 
-    #[tracing::instrument(name = "db.find_by_username", skip_all)]
+    #[tracing::instrument(name = "repository.find_by_username", skip_all)]
     async fn find_by_username(&self, username: &Username) -> AppResult<Option<User>> {
         let query = sqlx::query_as::<_, UserRow>("select * from users where username = $1")
             .bind(username.as_str());
@@ -109,7 +109,7 @@ impl UserRepository for PgUserRepository {
         Ok(row.map(User::from))
     }
 
-    #[tracing::instrument(name = "db.list_page", skip_all, fields(limit, offset))]
+    #[tracing::instrument(name = "repository.list_page", skip_all, fields(limit, offset))]
     async fn list_page(&self, limit: i64, offset: i64) -> AppResult<(Vec<User>, i64)> {
         let list_query = sqlx::query_as::<_, UserRow>(
             "select * from users order by created_at desc limit $1 offset $2",
