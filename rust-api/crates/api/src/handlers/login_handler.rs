@@ -10,7 +10,7 @@ use crate::response::ApiResponse;
 use crate::state::AppState;
 use crate::validation::to_app_error;
 
-#[tracing::instrument(skip_all, fields(email = %body.email))]
+#[tracing::instrument(name = "handler.login", skip_all, fields(email = %body.email))]
 pub async fn login_handler(
     State(state): State<AppState>,
     Sonic(body): Sonic<LoginRequest>,

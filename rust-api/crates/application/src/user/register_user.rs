@@ -35,7 +35,7 @@ impl RegisterUser {
         Self { uow, hasher }
     }
 
-    #[tracing::instrument(skip_all, fields(username = %cmd.username))]
+    #[tracing::instrument(name = "usecase.register_user", skip_all, fields(username = %cmd.username))]
     pub async fn execute(&self, cmd: RegisterUserCommand) -> AppResult<RegisterUserOutput> {
         let username = Username::parse(cmd.username)?;
         let email = Email::parse(cmd.email)?;

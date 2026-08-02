@@ -11,6 +11,7 @@ pub struct Argon2PasswordHasher;
 
 #[async_trait]
 impl PasswordHasher for Argon2PasswordHasher {
+    #[tracing::instrument(name = "password_hasher.hash", skip_all)]
     async fn hash(&self, raw: &RawPassword) -> AppResult<PasswordHash> {
         let plain = raw.expose().to_owned();
         // CPU-bound: keep it off the async reactor.
@@ -27,6 +28,7 @@ impl PasswordHasher for Argon2PasswordHasher {
         Ok(PasswordHash::from_hashed(hashed))
     }
 
+    #[tracing::instrument(name = "password_hasher.verify", skip_all)]
     async fn verify(&self, raw: &RawPassword, hash: &PasswordHash) -> AppResult<bool> {
         let plain = raw.expose().to_owned();
         let hash_str = hash.as_str().to_owned();

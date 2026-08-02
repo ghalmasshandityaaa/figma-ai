@@ -10,7 +10,7 @@ use crate::json::Sonic;
 use crate::response::ApiResponse;
 use crate::state::AppState;
 
-#[tracing::instrument(skip(state))]
+#[tracing::instrument(name = "handler.get_profile", skip(state))]
 pub async fn get_profile_handler(
     State(state): State<AppState>,
     Path(id): Path<String>,

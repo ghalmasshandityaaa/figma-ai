@@ -34,6 +34,7 @@ impl PasetoTokenIssuer {
 }
 
 impl TokenIssuer for PasetoTokenIssuer {
+    #[tracing::instrument(name = "token_issuer.issue", skip_all, fields(user_id = %user_id))]
     fn issue(&self, user_id: UserId) -> AppResult<TokenClaims> {
         let expires_at = (Utc::now() + Duration::seconds(self.ttl_seconds)).to_rfc3339();
 

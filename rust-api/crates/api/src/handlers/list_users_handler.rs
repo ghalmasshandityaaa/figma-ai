@@ -7,7 +7,7 @@ use crate::json::Sonic;
 use crate::response::ApiResponse;
 use crate::state::AppState;
 
-#[tracing::instrument(skip_all, fields(page = page.page, page_size = page.page_size))]
+#[tracing::instrument(name = "handler.list_users", skip_all, fields(page = page.page, page_size = page.page_size))]
 pub async fn list_users_handler(
     State(state): State<AppState>,
     Query(page): Query<PageRequest>,

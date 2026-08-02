@@ -20,7 +20,7 @@ impl ListUsers {
         Self { repository }
     }
 
-    #[tracing::instrument(skip_all, fields(limit, offset))]
+    #[tracing::instrument(name = "usecase.list_users", skip_all, fields(limit, offset))]
     pub async fn execute(&self, limit: i64, offset: i64) -> AppResult<ListUsersOutput> {
         let (users, total) = self.repository.list_page(limit, offset).await?;
 

@@ -22,7 +22,7 @@ impl PgUnitOfWork {
 
 #[async_trait]
 impl UnitOfWork for PgUnitOfWork {
-    #[tracing::instrument(skip_all, name = "pg_unit_of_work")]
+    #[tracing::instrument(skip_all, name = "uow.transaction")]
     async fn execute(
         &self,
         work: Box<dyn FnOnce(Arc<dyn TransactionScope>) -> BoxFuture<'static, AppResult<()>> + Send>,
