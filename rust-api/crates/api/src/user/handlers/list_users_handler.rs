@@ -1,7 +1,7 @@
 use axum::extract::{Query, State};
 use kernel::pagination::{PageMetadata, PageRequest};
 
-use crate::dto::ProfileResponse;
+use crate::user::dto::ProfileResponse;
 use crate::error_response::HttpError;
 use crate::json::Sonic;
 use crate::response::ApiResponse;

@@ -5,7 +5,7 @@ use garde::Validate;
 
 use application::user::RegisterUserCommand;
 
-use crate::dto::{RegisterRequest, RegisterResponse};
+use crate::user::dto::{RegisterRequest, RegisterResponse};
 use crate::error_response::HttpError;
 use crate::json::Sonic;
 use crate::response::ApiResponse;

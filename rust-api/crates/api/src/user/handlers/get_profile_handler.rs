@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use domain::user::UserId;
 
-use crate::dto::ProfileResponse;
+use crate::user::dto::ProfileResponse;
 use crate::error_response::HttpError;
 use crate::json::Sonic;
 use crate::response::ApiResponse;

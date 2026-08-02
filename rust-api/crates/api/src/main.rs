@@ -1,11 +1,12 @@
-mod dto;
 mod error_response;
-mod handlers;
+mod health;
 mod json;
 mod middleware;
+mod not_found_handler;
 mod response;
 mod routes;
 mod state;
+mod user;
 mod validation;
 
 use std::net::SocketAddr;

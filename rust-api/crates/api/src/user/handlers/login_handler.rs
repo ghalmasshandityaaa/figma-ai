@@ -3,7 +3,7 @@ use garde::Validate;
 
 use application::user::LoginUserCommand;
 
-use crate::dto::{LoginRequest, LoginResponse};
+use crate::user::dto::{LoginRequest, LoginResponse};
 use crate::error_response::HttpError;
 use crate::json::Sonic;
 use crate::response::ApiResponse;
