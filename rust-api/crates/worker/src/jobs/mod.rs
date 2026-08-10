@@ -1,10 +1,8 @@
-mod log_user_deletion;
 mod log_user_status_change;
 mod send_welcome_email;
 
 use sonic_rs::JsonValueTrait;
 
-use log_user_deletion::log_user_deletion;
 use log_user_status_change::log_user_status_change;
 use send_welcome_email::send_welcome_email;
 
@@ -18,13 +16,6 @@ pub async fn dispatch(event_type: &str, payload: &[u8]) -> anyhow::Result<()> {
                 .as_str()
                 .ok_or_else(|| anyhow::anyhow!("outbox payload missing `email`"))?;
             send_welcome_email(email).await
-        }
-        "user.deleted" => {
-            let value: sonic_rs::Value = sonic_rs::from_slice(payload)?;
-            let user_id = value["user_id"]
-                .as_str()
-                .ok_or_else(|| anyhow::anyhow!("outbox payload missing `user_id`"))?;
-            log_user_deletion(user_id).await
         }
         "user.activated" | "user.deactivated" => {
             let value: sonic_rs::Value = sonic_rs::from_slice(payload)?;

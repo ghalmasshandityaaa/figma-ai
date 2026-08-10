@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use application::user::{
-    ActivateUser, DeactivateUser, DeleteUser, GetUserProfile, ListUsers, LoginUser, RegisterUser,
+    ActivateUser, DeactivateUser, GetUserProfile, ListUsers, LoginUser, RegisterUser,
 };
 use infrastructure::config::AppConfig;
 use infrastructure::postgres::{build_pool, PgUnitOfWork, PgUserRepository};
@@ -45,7 +45,6 @@ async fn main() -> anyhow::Result<()> {
         login_user: Arc::new(LoginUser::new(repository.clone(), hasher, tokens)),
         get_user_profile: Arc::new(GetUserProfile::new(repository.clone())),
         list_users: Arc::new(ListUsers::new(repository.clone())),
-        delete_user: Arc::new(DeleteUser::new(repository.clone())),
         activate_user: Arc::new(ActivateUser::new(repository.clone())),
         deactivate_user: Arc::new(DeactivateUser::new(repository)),
     };

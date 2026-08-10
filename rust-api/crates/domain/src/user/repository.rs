@@ -12,9 +12,6 @@ use super::{
 #[async_trait]
 pub trait UserRepository: Send + Sync + 'static {
     async fn insert_with_event(&self, user: &User, event: &UserEvent) -> AppResult<()>;
-    /// Deletes the user in the same transaction as its outbox event.
-    /// Returns `false` (no event written) if no row matched `id`.
-    async fn delete_with_event(&self, id: UserId, event: &UserEvent) -> AppResult<bool>;
     /// Flips `is_active` and writes the matching `Activated`/`Deactivated`
     /// outbox event in one transaction. Returns `false` if no row matched
     /// `id`; the caller (use case) is responsible for rejecting a no-op

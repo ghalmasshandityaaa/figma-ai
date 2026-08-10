@@ -110,19 +110,6 @@ step "POST /api/v1/users/:id/deactivate — 404 (random uuid)"
 xh --ignore-stdin --check-status POST "$BASE/api/v1/users/00000000-0000-0000-0000-000000000000/deactivate" || true
 
 # -----------------------------------------------------------------------------
-# Delete
-# -----------------------------------------------------------------------------
-step "DELETE /api/v1/users/:id — delete the user just created"
-xh --ignore-stdin DELETE "$BASE/api/v1/users/$USER_ID" \
-  "Authorization:Bearer $ACCESS_TOKEN"
-
-step "DELETE /api/v1/users/:id — 404 (already deleted)"
-xh --ignore-stdin --check-status DELETE "$BASE/api/v1/users/$USER_ID" || true
-
-step "DELETE /api/v1/users/:id — 422 (malformed uuid)"
-xh --ignore-stdin --check-status DELETE "$BASE/api/v1/users/not-a-uuid" || true
-
-# -----------------------------------------------------------------------------
 # List users (pagination)
 # -----------------------------------------------------------------------------
 step "GET /api/v1/users — default pagination"
