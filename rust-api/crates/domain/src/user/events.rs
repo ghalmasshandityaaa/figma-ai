@@ -11,12 +11,17 @@ pub enum UserEvent {
         email: String,
         occurred_at: DateTime<Utc>,
     },
+    Deleted {
+        user_id: UserId,
+        occurred_at: DateTime<Utc>,
+    },
 }
 
 impl UserEvent {
     pub fn kind(&self) -> &'static str {
         match self {
             UserEvent::Registered { .. } => "user.registered",
+            UserEvent::Deleted { .. } => "user.deleted",
         }
     }
 }

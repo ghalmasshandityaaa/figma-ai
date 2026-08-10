@@ -12,7 +12,7 @@ mod validation;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use application::user::{GetUserProfile, ListUsers, LoginUser, RegisterUser};
+use application::user::{DeleteUser, GetUserProfile, ListUsers, LoginUser, RegisterUser};
 use infrastructure::config::AppConfig;
 use infrastructure::postgres::{build_pool, PgUnitOfWork, PgUserRepository};
 use infrastructure::security::{Argon2PasswordHasher, PasetoTokenIssuer};
@@ -42,7 +42,8 @@ async fn main() -> anyhow::Result<()> {
         register_user: Arc::new(RegisterUser::new(unit_of_work, hasher.clone())),
         login_user: Arc::new(LoginUser::new(repository.clone(), hasher, tokens)),
         get_user_profile: Arc::new(GetUserProfile::new(repository.clone())),
-        list_users: Arc::new(ListUsers::new(repository)),
+        list_users: Arc::new(ListUsers::new(repository.clone())),
+        delete_user: Arc::new(DeleteUser::new(repository)),
     };
 
     let router = middleware::apply(routes::build_router(state), &config);

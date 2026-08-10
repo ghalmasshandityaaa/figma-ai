@@ -77,6 +77,19 @@ step "GET /api/v1/users/:id — 422 (malformed uuid)"
 xh --ignore-stdin --check-status GET "$BASE/api/v1/users/not-a-uuid" || true
 
 # -----------------------------------------------------------------------------
+# Delete
+# -----------------------------------------------------------------------------
+step "DELETE /api/v1/users/:id — delete the user just created"
+xh --ignore-stdin DELETE "$BASE/api/v1/users/$USER_ID" \
+  "Authorization:Bearer $ACCESS_TOKEN"
+
+step "DELETE /api/v1/users/:id — 404 (already deleted)"
+xh --ignore-stdin --check-status DELETE "$BASE/api/v1/users/$USER_ID" || true
+
+step "DELETE /api/v1/users/:id — 422 (malformed uuid)"
+xh --ignore-stdin --check-status DELETE "$BASE/api/v1/users/not-a-uuid" || true
+
+# -----------------------------------------------------------------------------
 # List users (pagination)
 # -----------------------------------------------------------------------------
 step "GET /api/v1/users — default pagination"

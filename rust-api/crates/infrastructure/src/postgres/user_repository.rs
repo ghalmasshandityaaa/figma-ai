@@ -68,6 +68,26 @@ impl UserRepository for PgUserRepository {
         }
     }
 
+    #[tracing::instrument(name = "repository.delete_with_event", skip_all, fields(user_id = %id))]
+    async fn delete_with_event(&self, id: UserId, event: &UserEvent) -> AppResult<bool> {
+        match &self.db {
+            DbHandle::Pool(pool) => {
+                let mut tx = pool.begin().await.map_err(|e| AppError::Internal(e.into()))?;
+                let deleted = run_delete_with_event(&mut tx, id, event)
+                    .await
+                    .map_err(map_sqlx_err)?;
+                tx.commit().await.map_err(|e| AppError::Internal(e.into()))?;
+                Ok(deleted)
+            }
+            DbHandle::Tx(tx) => {
+                let mut guard = tx.lock().await;
+                run_delete_with_event(&mut guard, id, event)
+                    .await
+                    .map_err(map_sqlx_err)
+            }
+        }
+    }
+
     #[tracing::instrument(name = "repository.find_by_id", skip_all, fields(user_id = %id))]
     async fn find_by_id(&self, id: UserId) -> AppResult<Option<User>> {
         let query = sqlx::query_as::<_, UserRow>("select * from users where id = $1").bind(id.as_uuid());
@@ -161,7 +181,10 @@ async fn run_insert_with_event(
         user_id,
         email,
         occurred_at,
-    } = event;
+    } = event
+    else {
+        unreachable!("run_insert_with_event called with a non-Registered event");
+    };
     let payload = sonic_rs::json!({
         "user_id": user_id.to_string(),
         "email": email,
@@ -189,6 +212,58 @@ async fn run_insert_with_event(
         .await?;
 
     Ok(())
+}
+
+/// Deletes the row and, only if a row actually matched, writes the
+/// `user.deleted` outbox event in the same connection/transaction —
+/// mirrors `run_insert_with_event`'s "one write, two tables" shape.
+async fn run_delete_with_event(
+    conn: &mut PgConnection,
+    id: UserId,
+    event: &UserEvent,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("delete from users where id = $1")
+        .bind(id.as_uuid())
+        .execute(&mut *conn)
+        .await?;
+
+    if result.rows_affected() == 0 {
+        return Ok(false);
+    }
+
+    let UserEvent::Deleted {
+        user_id,
+        occurred_at,
+    } = event
+    else {
+        unreachable!("run_delete_with_event called with a non-Deleted event");
+    };
+    let payload = sonic_rs::json!({
+        "user_id": user_id.to_string(),
+        "occurred_at": occurred_at.to_rfc3339(),
+    })
+    .to_string();
+
+    sqlx::query(
+        r#"
+        insert into outbox_events (id, aggregate_id, event_type, payload, created_at)
+        values ($1, $2, $3, $4::jsonb, $5)
+        "#,
+    )
+    .bind(Uuid::now_v7())
+    .bind(user_id.as_uuid())
+    .bind(event.kind())
+    .bind(payload)
+    .bind(*occurred_at)
+    .execute(&mut *conn)
+    .await?;
+
+    sqlx::query("select pg_notify('outbox_events', $1)")
+        .bind(event.kind())
+        .execute(&mut *conn)
+        .await?;
+
+    Ok(true)
 }
 
 fn map_sqlx_err(err: sqlx::Error) -> AppError {

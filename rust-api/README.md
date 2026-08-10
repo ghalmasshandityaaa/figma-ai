@@ -98,6 +98,7 @@ Every response is one shape — `ok` discriminates success from error, snake_cas
 POST /api/v1/users          register  { username, email, password }
 GET  /api/v1/users          list, paginated (?page=&page_size=)
 GET  /api/v1/users/:id      profile
+DELETE /api/v1/users/:id    delete
 POST /api/v1/auth/login     login     { email, password } -> PASETO access_token
 GET  /healthz                 liveness probe
 ```
