@@ -30,6 +30,7 @@ impl ListUsers {
                 id: user.id,
                 username: user.username.as_str().to_owned(),
                 email: user.email.as_str().to_owned(),
+                is_active: user.is_active,
                 created_at: user.created_at,
             })
             .collect();

@@ -52,6 +52,13 @@ impl LoginUser {
             ));
         }
 
+        if !user.is_active {
+            return Err(AppError::forbidden(
+                "auth/account-deactivated",
+                "account is deactivated",
+            ));
+        }
+
         self.tokens.issue(user.id)
     }
 }

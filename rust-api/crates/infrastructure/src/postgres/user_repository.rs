@@ -29,6 +29,7 @@ struct UserRow {
     username: String,
     email: String,
     password_hash: String,
+    is_active: bool,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
@@ -41,6 +42,7 @@ impl From<UserRow> for User {
                 .expect("persisted username violates invariant"),
             email: Email::parse(row.email).expect("persisted email violates invariant"),
             password_hash: PasswordHash::from_hashed(row.password_hash),
+            is_active: row.is_active,
             created_at: row.created_at,
             updated_at: row.updated_at,
         }
@@ -82,6 +84,31 @@ impl UserRepository for PgUserRepository {
             DbHandle::Tx(tx) => {
                 let mut guard = tx.lock().await;
                 run_delete_with_event(&mut guard, id, event)
+                    .await
+                    .map_err(map_sqlx_err)
+            }
+        }
+    }
+
+    #[tracing::instrument(name = "repository.set_active_with_event", skip_all, fields(user_id = %id, is_active))]
+    async fn set_active_with_event(
+        &self,
+        id: UserId,
+        is_active: bool,
+        event: &UserEvent,
+    ) -> AppResult<bool> {
+        match &self.db {
+            DbHandle::Pool(pool) => {
+                let mut tx = pool.begin().await.map_err(|e| AppError::Internal(e.into()))?;
+                let changed = run_set_active_with_event(&mut tx, id, is_active, event)
+                    .await
+                    .map_err(map_sqlx_err)?;
+                tx.commit().await.map_err(|e| AppError::Internal(e.into()))?;
+                Ok(changed)
+            }
+            DbHandle::Tx(tx) => {
+                let mut guard = tx.lock().await;
+                run_set_active_with_event(&mut guard, id, is_active, event)
                     .await
                     .map_err(map_sqlx_err)
             }
@@ -255,6 +282,67 @@ async fn run_delete_with_event(
     .bind(event.kind())
     .bind(payload)
     .bind(*occurred_at)
+    .execute(&mut *conn)
+    .await?;
+
+    sqlx::query("select pg_notify('outbox_events', $1)")
+        .bind(event.kind())
+        .execute(&mut *conn)
+        .await?;
+
+    Ok(true)
+}
+
+/// Flips `is_active` and, only if a row actually matched, writes the
+/// matching `Activated`/`Deactivated` outbox event in the same
+/// connection/transaction — mirrors `run_delete_with_event`'s shape. The
+/// caller (use case) already rejected a no-op transition, so any matched
+/// row here is a genuine state change.
+async fn run_set_active_with_event(
+    conn: &mut PgConnection,
+    id: UserId,
+    is_active: bool,
+    event: &UserEvent,
+) -> Result<bool, sqlx::Error> {
+    let occurred_at = match event {
+        UserEvent::Activated { occurred_at, .. } | UserEvent::Deactivated { occurred_at, .. } => {
+            *occurred_at
+        }
+        _ => unreachable!("run_set_active_with_event called with a non-status event"),
+    };
+
+    let result = sqlx::query("update users set is_active = $1, updated_at = $2 where id = $3")
+        .bind(is_active)
+        .bind(occurred_at)
+        .bind(id.as_uuid())
+        .execute(&mut *conn)
+        .await?;
+
+    if result.rows_affected() == 0 {
+        return Ok(false);
+    }
+
+    let user_id = match event {
+        UserEvent::Activated { user_id, .. } | UserEvent::Deactivated { user_id, .. } => user_id,
+        _ => unreachable!("run_set_active_with_event called with a non-status event"),
+    };
+    let payload = sonic_rs::json!({
+        "user_id": user_id.to_string(),
+        "occurred_at": occurred_at.to_rfc3339(),
+    })
+    .to_string();
+
+    sqlx::query(
+        r#"
+        insert into outbox_events (id, aggregate_id, event_type, payload, created_at)
+        values ($1, $2, $3, $4::jsonb, $5)
+        "#,
+    )
+    .bind(Uuid::now_v7())
+    .bind(user_id.as_uuid())
+    .bind(event.kind())
+    .bind(payload)
+    .bind(occurred_at)
     .execute(&mut *conn)
     .await?;
 

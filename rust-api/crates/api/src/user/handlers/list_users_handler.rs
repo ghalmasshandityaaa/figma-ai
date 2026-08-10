@@ -21,6 +21,7 @@ pub async fn list_users_handler(
             id: profile.id.to_string(),
             username: profile.username,
             email: profile.email,
+            is_active: profile.is_active,
             created_at: profile.created_at.to_rfc3339(),
         })
         .collect();

@@ -8,6 +8,7 @@ pub struct UserProfile {
     pub id: UserId,
     pub username: String,
     pub email: String,
+    pub is_active: bool,
     pub created_at: DateTime<Utc>,
 }
 
@@ -33,6 +34,7 @@ impl GetUserProfile {
             id: user.id,
             username: user.username.as_str().to_owned(),
             email: user.email.as_str().to_owned(),
+            is_active: user.is_active,
             created_at: user.created_at,
         })
     }

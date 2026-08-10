@@ -77,6 +77,39 @@ step "GET /api/v1/users/:id — 422 (malformed uuid)"
 xh --ignore-stdin --check-status GET "$BASE/api/v1/users/not-a-uuid" || true
 
 # -----------------------------------------------------------------------------
+# Activate / deactivate
+# -----------------------------------------------------------------------------
+step "POST /api/v1/users/:id/deactivate — suspend the account"
+xh --ignore-stdin POST "$BASE/api/v1/users/$USER_ID/deactivate" \
+  "Authorization:Bearer $ACCESS_TOKEN"
+
+step "POST /api/v1/auth/login — 403 after deactivation"
+xh --ignore-stdin --check-status POST "$BASE/api/v1/auth/login" \
+  email="$EMAIL" \
+  password=S3cretPass \
+  || true
+
+step "POST /api/v1/users/:id/deactivate — 409 already inactive"
+xh --ignore-stdin --check-status POST "$BASE/api/v1/users/$USER_ID/deactivate" \
+  "Authorization:Bearer $ACCESS_TOKEN" \
+  || true
+
+step "POST /api/v1/users/:id/activate — reinstate the account"
+xh --ignore-stdin POST "$BASE/api/v1/users/$USER_ID/activate" \
+  "Authorization:Bearer $ACCESS_TOKEN"
+
+step "POST /api/v1/users/:id/activate — 409 already active"
+xh --ignore-stdin --check-status POST "$BASE/api/v1/users/$USER_ID/activate" \
+  "Authorization:Bearer $ACCESS_TOKEN" \
+  || true
+
+step "POST /api/v1/users/:id/activate — 422 (malformed uuid)"
+xh --ignore-stdin --check-status POST "$BASE/api/v1/users/not-a-uuid/activate" || true
+
+step "POST /api/v1/users/:id/deactivate — 404 (random uuid)"
+xh --ignore-stdin --check-status POST "$BASE/api/v1/users/00000000-0000-0000-0000-000000000000/deactivate" || true
+
+# -----------------------------------------------------------------------------
 # Delete
 # -----------------------------------------------------------------------------
 step "DELETE /api/v1/users/:id — delete the user just created"

@@ -15,6 +15,14 @@ pub enum UserEvent {
         user_id: UserId,
         occurred_at: DateTime<Utc>,
     },
+    Activated {
+        user_id: UserId,
+        occurred_at: DateTime<Utc>,
+    },
+    Deactivated {
+        user_id: UserId,
+        occurred_at: DateTime<Utc>,
+    },
 }
 
 impl UserEvent {
@@ -22,6 +30,8 @@ impl UserEvent {
         match self {
             UserEvent::Registered { .. } => "user.registered",
             UserEvent::Deleted { .. } => "user.deleted",
+            UserEvent::Activated { .. } => "user.activated",
+            UserEvent::Deactivated { .. } => "user.deactivated",
         }
     }
 }
