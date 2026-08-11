@@ -1,11 +1,14 @@
 use std::sync::Arc;
 
+use application::ports::TokenVerifier;
 use application::user::{
     ActivateUser, DeactivateUser, GetUserProfile, ListUsers, LoginUser, RegisterUser,
 };
 
 /// Shared, cheaply-cloneable application state handed to every handler.
-/// Holds fully-wired use cases only — no raw pool/config leaks past `main`.
+/// Holds fully-wired use cases plus the `token_verifier` port used by the
+/// `AuthenticatedUser` extractor — the one non-use-case dependency it
+/// carries (see ADR-0001).
 #[derive(Clone)]
 pub struct AppState {
     pub register_user: Arc<RegisterUser>,
@@ -14,4 +17,5 @@ pub struct AppState {
     pub list_users: Arc<ListUsers>,
     pub activate_user: Arc<ActivateUser>,
     pub deactivate_user: Arc<DeactivateUser>,
+    pub token_verifier: Arc<dyn TokenVerifier>,
 }

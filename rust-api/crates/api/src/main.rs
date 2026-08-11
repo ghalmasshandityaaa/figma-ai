@@ -1,3 +1,8 @@
+// PLAYG-005 (blocked on this ticket) is the first handler to name
+// `AuthenticatedUser` in its signature — until then the extractor is
+// intentionally unused, not dead.
+#[allow(dead_code)]
+mod authenticated_user;
 mod error_response;
 mod health;
 mod json;
@@ -42,11 +47,12 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState {
         register_user: Arc::new(RegisterUser::new(unit_of_work, hasher.clone())),
-        login_user: Arc::new(LoginUser::new(repository.clone(), hasher, tokens)),
+        login_user: Arc::new(LoginUser::new(repository.clone(), hasher, tokens.clone())),
         get_user_profile: Arc::new(GetUserProfile::new(repository.clone())),
         list_users: Arc::new(ListUsers::new(repository.clone())),
         activate_user: Arc::new(ActivateUser::new(repository.clone())),
         deactivate_user: Arc::new(DeactivateUser::new(repository)),
+        token_verifier: tokens,
     };
 
     let router = middleware::apply(routes::build_router(state), &config);

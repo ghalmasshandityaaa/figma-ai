@@ -182,6 +182,8 @@ TraceQL `{ resource.service.name = "rust-api" }`) to see the request span, corre
 
 ## Known scope decision
 
-`GET /users/:id` and `GET /users` are public reads (no bearer-auth middleware) — PASETO
-issuance via login is fully functional; wiring a token-verification extractor for protected
-routes is the natural next slice.
+`GET /users/:id` and `GET /users` are public reads (no bearer-auth required) — this is a
+deliberate choice, not an oversight. `AuthenticatedUser`, the `FromRequestParts<AppState>`
+extractor that verifies a PASETO access token into a `UserId` (see ADR-0001), exists and is
+covered by unit tests; it's opt-in per handler, so a route stays public until a handler names
+it in its signature.

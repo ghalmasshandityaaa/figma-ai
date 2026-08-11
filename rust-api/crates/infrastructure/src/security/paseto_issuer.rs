@@ -1,12 +1,13 @@
 use std::convert::TryFrom;
 
-use application::ports::{TokenClaims, TokenIssuer};
+use application::ports::{TokenClaims, TokenIssuer, TokenVerifier};
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
 use chrono::{Duration, Utc};
 use domain::user::UserId;
 use kernel::{AppError, AppResult};
 use rusty_paseto::prelude::*;
+use uuid::Uuid;
 
 /// PASETO v4.local (XChaCha20-Poly1305, symmetric) access tokens — no
 /// algorithm-confusion surface like JWT's `alg: none`/RS-vs-HS attacks,
@@ -52,5 +53,32 @@ impl TokenIssuer for PasetoTokenIssuer {
             access_token,
             expires_in_seconds: self.ttl_seconds,
         })
+    }
+}
+
+impl TokenVerifier for PasetoTokenIssuer {
+    /// Every failure mode — bad ciphertext, wrong key, expired, unparseable
+    /// subject — maps to the same `auth/invalid-token` code, deliberately
+    /// not distinguishing expired from forged (mirrors `LoginUser` giving
+    /// one code for both a wrong email and a wrong password).
+    #[tracing::instrument(name = "token_verifier.verify", skip_all)]
+    fn verify(&self, token: &str) -> AppResult<UserId> {
+        // `default()` validates ExpirationClaim (and NotBeforeClaim, unset
+        // here) automatically before returning the claim set.
+        let claims = PasetoParser::<V4, Local>::default()
+            .parse(token, &self.key)
+            .map_err(|_| {
+                AppError::unauthorized("auth/invalid-token", "invalid or expired token")
+            })?;
+
+        let subject = claims["sub"].as_str().ok_or_else(|| {
+            AppError::unauthorized("auth/invalid-token", "invalid or expired token")
+        })?;
+
+        let user_id = Uuid::parse_str(subject).map_err(|_| {
+            AppError::unauthorized("auth/invalid-token", "invalid or expired token")
+        })?;
+
+        Ok(UserId::from_uuid(user_id))
     }
 }
