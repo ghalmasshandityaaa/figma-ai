@@ -158,6 +158,43 @@ xh --ignore-stdin --check-status GET "$BASE/api/v1/products/00000000-0000-0000-0
 step "GET /api/v1/products/:id — 422 (malformed uuid)"
 xh --ignore-stdin --check-status GET "$BASE/api/v1/products/not-a-uuid" || true
 
+step "POST /api/v1/users — register a second user (for the forbidden-delete check)"
+SUFFIX2="$(date +%s)$RANDOM"
+EMAIL2="bob-$SUFFIX2@example.com"
+REGISTER2_JSON=$(xh --ignore-stdin POST "$BASE/api/v1/users" \
+  username="bob$SUFFIX2" \
+  email="$EMAIL2" \
+  password=S3cretPass)
+LOGIN2_JSON=$(xh --ignore-stdin POST "$BASE/api/v1/auth/login" \
+  email="$EMAIL2" \
+  password=S3cretPass)
+ACCESS_TOKEN_2=$(echo "$LOGIN2_JSON" | jq -r '.data.access_token')
+
+step "DELETE /api/v1/products/:id — 401 unauthenticated"
+xh --ignore-stdin --check-status DELETE "$BASE/api/v1/products/$PRODUCT_ID" || true
+
+step "DELETE /api/v1/products/:id — 403 forbidden (not the owner)"
+xh --ignore-stdin --check-status DELETE "$BASE/api/v1/products/$PRODUCT_ID" \
+  "Authorization:Bearer $ACCESS_TOKEN_2" \
+  || true
+
+step "DELETE /api/v1/products/:id — 404 (random uuid)"
+xh --ignore-stdin --check-status DELETE "$BASE/api/v1/products/00000000-0000-0000-0000-000000000000" \
+  "Authorization:Bearer $ACCESS_TOKEN" \
+  || true
+
+step "DELETE /api/v1/products/:id — 422 (malformed uuid)"
+xh --ignore-stdin --check-status DELETE "$BASE/api/v1/products/not-a-uuid" \
+  "Authorization:Bearer $ACCESS_TOKEN" \
+  || true
+
+step "DELETE /api/v1/products/:id — owner deletes their product (204 No Content)"
+xh --ignore-stdin --check-status DELETE "$BASE/api/v1/products/$PRODUCT_ID" \
+  "Authorization:Bearer $ACCESS_TOKEN"
+
+step "GET /api/v1/products/:id — 404 after delete"
+xh --ignore-stdin --check-status GET "$BASE/api/v1/products/$PRODUCT_ID" || true
+
 # -----------------------------------------------------------------------------
 # CORS / not found
 # -----------------------------------------------------------------------------

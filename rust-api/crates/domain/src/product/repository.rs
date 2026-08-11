@@ -14,4 +14,8 @@ pub trait ProductRepository: Send + Sync + 'static {
     /// this stays index-backed via the primary key), plus the total row
     /// count needed to compute `PageMetadata`.
     async fn list_page(&self, limit: i64, offset: i64) -> AppResult<(Vec<Product>, i64)>;
+    /// Returns `true` if a row was deleted, `false` if no product with
+    /// this id existed — lets the use case distinguish a genuine
+    /// not-found from a successful delete without a prior read.
+    async fn delete(&self, id: ProductId) -> AppResult<bool>;
 }

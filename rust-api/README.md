@@ -104,6 +104,7 @@ POST /api/v1/auth/login             login     { email, password } -> PASETO acce
 POST /api/v1/products               create a product (bearer auth required) { name, description, price_cents, currency }
 GET  /api/v1/products               list, paginated (?page=&page_size=)
 GET  /api/v1/products/:id           product detail (public)
+DELETE /api/v1/products/:id         delete a product (bearer auth required, owner only)
 GET  /healthz                         liveness probe
 ```
 

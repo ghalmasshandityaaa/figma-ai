@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use application::ports::TokenVerifier;
-use application::product::{CreateProduct, GetProduct, ListProducts};
+use application::product::{CreateProduct, DeleteProduct, GetProduct, ListProducts};
 use application::user::{
     ActivateUser, DeactivateUser, GetUserProfile, ListUsers, LoginUser, RegisterUser,
 };
@@ -21,5 +21,6 @@ pub struct AppState {
     pub create_product: Arc<CreateProduct>,
     pub list_products: Arc<ListProducts>,
     pub get_product: Arc<GetProduct>,
+    pub delete_product: Arc<DeleteProduct>,
     pub token_verifier: Arc<dyn TokenVerifier>,
 }

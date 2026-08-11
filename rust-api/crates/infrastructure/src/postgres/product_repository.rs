@@ -114,6 +114,19 @@ impl ProductRepository for PgProductRepository {
 
         Ok((rows.into_iter().map(Product::from).collect(), total))
     }
+
+    #[tracing::instrument(name = "repository.delete", skip_all, fields(product_id = %id))]
+    async fn delete(&self, id: ProductId) -> AppResult<bool> {
+        let query = sqlx::query("delete from products where id = $1").bind(id.as_uuid());
+
+        let result = match &self.db {
+            DbHandle::Pool(pool) => query.execute(pool).await,
+            DbHandle::Tx(tx) => query.execute(&mut **tx.lock().await).await,
+        }
+        .map_err(|e| AppError::Internal(e.into()))?;
+
+        Ok(result.rows_affected() > 0)
+    }
 }
 
 fn map_sqlx_err(err: sqlx::Error) -> AppError {

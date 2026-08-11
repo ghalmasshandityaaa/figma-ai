@@ -14,7 +14,7 @@ mod validation;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use application::product::{CreateProduct, GetProduct, ListProducts};
+use application::product::{CreateProduct, DeleteProduct, GetProduct, ListProducts};
 use application::user::{
     ActivateUser, DeactivateUser, GetUserProfile, ListUsers, LoginUser, RegisterUser,
 };
@@ -53,7 +53,8 @@ async fn main() -> anyhow::Result<()> {
         deactivate_user: Arc::new(DeactivateUser::new(repository.clone())),
         create_product: Arc::new(CreateProduct::new(product_repository.clone(), repository)),
         list_products: Arc::new(ListProducts::new(product_repository.clone())),
-        get_product: Arc::new(GetProduct::new(product_repository)),
+        get_product: Arc::new(GetProduct::new(product_repository.clone())),
+        delete_product: Arc::new(DeleteProduct::new(product_repository)),
         token_verifier: tokens,
     };
 
