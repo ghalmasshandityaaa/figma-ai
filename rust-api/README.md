@@ -101,6 +101,9 @@ GET  /api/v1/users/:id              profile
 POST /api/v1/users/:id/activate     reinstate a deactivated account
 POST /api/v1/users/:id/deactivate   suspend an account (blocks future logins)
 POST /api/v1/auth/login             login     { email, password } -> PASETO access_token
+POST /api/v1/products               create a product (bearer auth required) { name, description, price_cents, currency }
+GET  /api/v1/products               list, paginated (?page=&page_size=)
+GET  /api/v1/products/:id           product detail (public)
 GET  /healthz                         liveness probe
 ```
 

@@ -119,6 +119,46 @@ step "GET /api/v1/users?page=1&page_size=5 — explicit pagination"
 xh --ignore-stdin GET "$BASE/api/v1/users" page==1 page_size==5
 
 # -----------------------------------------------------------------------------
+# Products
+# -----------------------------------------------------------------------------
+step "POST /api/v1/products — 401 unauthenticated create (auth/missing-token)"
+xh --ignore-stdin --check-status POST "$BASE/api/v1/products" \
+  name="Unauthorized Widget" \
+  price_cents:=999 \
+  currency=USD \
+  || true
+
+step "POST /api/v1/products — create a product"
+CREATE_PRODUCT_JSON=$(xh --ignore-stdin POST "$BASE/api/v1/products" \
+  "Authorization:Bearer $ACCESS_TOKEN" \
+  name="Vintage Turntable" \
+  description="Belt-drive, fully serviced" \
+  price_cents:=24999 \
+  currency=USD)
+echo "$CREATE_PRODUCT_JSON"
+PRODUCT_ID=$(echo "$CREATE_PRODUCT_JSON" | jq -r '.data.id')
+
+step "POST /api/v1/products — 422 validation error (empty name, negative price, bad currency)"
+xh --ignore-stdin --check-status POST "$BASE/api/v1/products" \
+  "Authorization:Bearer $ACCESS_TOKEN" \
+  name="" \
+  price_cents:=-100 \
+  currency=usd \
+  || true
+
+step "GET /api/v1/products — list, paginated (public, no token)"
+xh --ignore-stdin GET "$BASE/api/v1/products"
+
+step "GET /api/v1/products/:id — fetch the created product (public, no token)"
+xh --ignore-stdin GET "$BASE/api/v1/products/$PRODUCT_ID"
+
+step "GET /api/v1/products/:id — 404 (random uuid)"
+xh --ignore-stdin --check-status GET "$BASE/api/v1/products/00000000-0000-0000-0000-000000000000" || true
+
+step "GET /api/v1/products/:id — 422 (malformed uuid)"
+xh --ignore-stdin --check-status GET "$BASE/api/v1/products/not-a-uuid" || true
+
+# -----------------------------------------------------------------------------
 # CORS / not found
 # -----------------------------------------------------------------------------
 step "OPTIONS /api/v1/users — CORS preflight (disallowed if no origin configured)"

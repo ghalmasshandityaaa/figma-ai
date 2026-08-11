@@ -3,4 +3,5 @@
 //! `TokenIssuer`) — never touches SQL or HTTP directly.
 
 pub mod ports;
+pub mod product;
 pub mod user;

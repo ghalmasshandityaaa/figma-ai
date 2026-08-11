@@ -1,13 +1,10 @@
-// PLAYG-005 (blocked on this ticket) is the first handler to name
-// `AuthenticatedUser` in its signature — until then the extractor is
-// intentionally unused, not dead.
-#[allow(dead_code)]
 mod authenticated_user;
 mod error_response;
 mod health;
 mod json;
 mod middleware;
 mod not_found_handler;
+mod product;
 mod response;
 mod routes;
 mod state;
@@ -17,11 +14,12 @@ mod validation;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use application::product::{CreateProduct, GetProduct, ListProducts};
 use application::user::{
     ActivateUser, DeactivateUser, GetUserProfile, ListUsers, LoginUser, RegisterUser,
 };
 use infrastructure::config::AppConfig;
-use infrastructure::postgres::{build_pool, PgUnitOfWork, PgUserRepository};
+use infrastructure::postgres::{build_pool, PgProductRepository, PgUnitOfWork, PgUserRepository};
 use infrastructure::security::{Argon2PasswordHasher, PasetoTokenIssuer};
 use infrastructure::telemetry::init_tracing;
 
@@ -38,6 +36,7 @@ async fn main() -> anyhow::Result<()> {
 
     let pool = build_pool(&config.database_url, config.database_max_connections).await?;
     let repository = Arc::new(PgUserRepository::new(pool.clone()));
+    let product_repository = Arc::new(PgProductRepository::new(pool.clone()));
     let unit_of_work = Arc::new(PgUnitOfWork::new(pool));
     let hasher = Arc::new(Argon2PasswordHasher);
     let tokens = Arc::new(PasetoTokenIssuer::new(
@@ -51,7 +50,10 @@ async fn main() -> anyhow::Result<()> {
         get_user_profile: Arc::new(GetUserProfile::new(repository.clone())),
         list_users: Arc::new(ListUsers::new(repository.clone())),
         activate_user: Arc::new(ActivateUser::new(repository.clone())),
-        deactivate_user: Arc::new(DeactivateUser::new(repository)),
+        deactivate_user: Arc::new(DeactivateUser::new(repository.clone())),
+        create_product: Arc::new(CreateProduct::new(product_repository.clone(), repository)),
+        list_products: Arc::new(ListProducts::new(product_repository.clone())),
+        get_product: Arc::new(GetProduct::new(product_repository)),
         token_verifier: tokens,
     };
 
